@@ -1,0 +1,25 @@
+name: "Passenger Train"
+description: "Passenger Train Example"
+
+mass: 206000.0
+adh_mass: 206000.0
+davis_a: 0.7661
+davis_b: 0.0110
+davis_c: 0.000223
+rotational_inertia: 3.90
+
+braking_curve_table:
+  # [ speed (kmh), deceleration (m/s^2) ]
+  - [ 120        , 0.6690 ] # [  0, 120) => 0.6690
+  - [ 150        , 0.5567 ] # [120, 150) => 0.5567
+  - [ 180        , 0.5355 ] # [150, 180) => 0.5355
+  - [ 200        , 0.5271 ] # [180, 200) => 0.5271
+                            # [200, ...) => 0.5271
+
+tractive_effort_table:
+  # [ speed (kmh), force (N) ]
+  - [ 20         , 160000 ] # (...,  20] => constant force (160 kN)
+  - [ 60         , 50000  ] # ( 20,  60) => constant power (50 kN * 60 kmh)
+  - [ 100        , 30000  ] # [ 60, 100) => constant power (30 kN * 100 kmh)
+  - [ 160        , 20000  ] # [100, 160) => constant power (20 kN * 160 kmh)
+                            # [160, ...) => max train speed (0 kN)
