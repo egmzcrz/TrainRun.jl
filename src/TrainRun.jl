@@ -34,6 +34,7 @@ Base.@kwdef struct Path
   station_masks::Vector{Bool}
   station_pos = Vector{Float64}
   station_names = Vector{String}
+  dwell_times = Vector{Float64}
 end
 
 Base.@kwdef struct TrainRunSimulation
@@ -64,12 +65,12 @@ function parse_commandline()
     help = "Process the track direction in reverse"
     action = :store_true
 
-    "--ppkm"
+    "--ppkm", "-p"
     help = "Number of discretization points per kilometer"
     arg_type = Int
     default = 1000
 
-    "--dwell"
+    "--dwell", "-d"
     help = "Dwell time at stations in seconds"
     arg_type = Float64
     default = 0.0
@@ -118,7 +119,7 @@ end
 """
 Constructor to create a Path directly from a CSV file.
 """
-function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
+function Path(filepath::String; dwell_time::Float64=0.0, ppkm::Int=1000, is_reversed::Bool=false)
   df = CSV.read(filepath, DataFrame)
 
   # Column processing
@@ -145,6 +146,7 @@ function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
   curve_segs = Vector{Float64}[]
   slope_segs = Vector{Float64}[]
   is_station_segs = Vector{Bool}[]
+  dwell_time_segs = Vector{Float64}[]
 
   # Keep track of stations
   station_pos = Float64[]
@@ -176,6 +178,11 @@ function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
     push!(curve_segs, fill(curve, n_points))
     push!(slope_segs, fill(slope, n_points))
     push!(is_station_segs, fill(is_station, n_points))
+    if is_station
+      push!(dwell_time_segs, fill(dwell_time/n_points, n_points))
+    else
+      push!(dwell_time_segs, fill(0.0, n_points))
+    end
   end
 
   # Flatten the arrays
@@ -184,6 +191,7 @@ function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
   curves = reduce(vcat, curve_segs)
   slopes = reduce(vcat, slope_segs)
   station_masks = reduce(vcat, is_station_segs)
+  dwell_times = reduce(vcat, dwell_time_segs)
 
   push!(positions, last(df.x_start))
   push!(speed_limits, last(df.v_limit))
@@ -192,6 +200,7 @@ function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
   push!(station_masks, true)
   push!(station_pos, last(df.x_start))
   push!(station_names, last(df.station))
+  push!(dwell_times, dwell_time)
 
   # Revert track geometry
   if is_reversed
@@ -201,6 +210,7 @@ function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
     reverse!(slopes)
     reverse!(curves)
     reverse!(station_masks)
+    reverse!(dwell_times)
     slopes .*= -1.0
     curves .*= -1.0
 
@@ -208,13 +218,13 @@ function Path(filepath::String; ppkm::Int=100, is_reversed::Bool=false)
     reverse!(station_names)
   end
 
-  return Path(positions, speed_limits, slopes, curves, station_masks, station_pos, station_names)
+  return Path(positions, speed_limits, slopes, curves, station_masks, station_pos, station_names, dwell_times)
 end
 
 """
 Constructor to run the simulation.
 """
-function TrainRunSimulation(train::Train, path::Path)
+function TrainRunSimulation(train::Train, path::Path, dwell_time::Float64)
   v_fwd = forward_pass(train, path)
   v_bwd = backward_pass(train, path)
   v_final = min.(v_fwd, v_bwd)
@@ -231,7 +241,7 @@ function TrainRunSimulation(train::Train, path::Path)
     ds = path.positions[i+1] - path.positions[i]
 
     dt = v_avg > 0 ? ds / v_avg : 0.0
-    time[i+1] = time[i] + dt
+    time[i+1] = time[i] + dt +  path.dwell_times[i]
 
     acceleration = ds > 0 ? (v2^2 - v1^2) / (2 * ds) : 0.0
     R_roll = rolling_resistance(train, v_avg)
@@ -251,6 +261,9 @@ function TrainRunSimulation(train::Train, path::Path)
       energy[i+1] = energy[i]
     end
   end
+
+  # The last point is always a terminal (account for its dwell time)
+  time[end] += path.dwell_times[end]
 
   profile_df = DataFrame(
     distance_km = path.positions .* 0.001,
@@ -578,18 +591,16 @@ function main()
   ppkm = args["ppkm"]
   out_filepath = args["out"]
   show = args["show"]
-
-  # TODO: implement dwelling
   dwell_time = args["dwell"]
 
   println("Loading track geometry data from: $geom_filepath")
-  path = Path(geom_filepath, ppkm=ppkm, is_reversed=is_reversed)
+  path = Path(geom_filepath, dwell_time=dwell_time, ppkm=ppkm, is_reversed=is_reversed)
 
   println("Loading train data from: $train_filepath")
   train = Train(train_filepath)
 
   println("Running simulation...")
-  sim = TrainRunSimulation(train, path)
+  sim = TrainRunSimulation(train, path, dwell_time)
   profile = sim.profile
 
   total_time = profile.time_min[end]
