@@ -1,6 +1,8 @@
 # TrainRun.jl
 
-**TrainRun.jl** is a Train Run Simulation Engine written in Julia. It calculates the continuous speed, time, force, and energy profiles of a train traveling along a specified track layout.
+**TrainRun.jl** is a simple Train Run Simulation Engine written in Julia. It calculates the continuous speed, time, force, and energy profiles of a train traveling along a specified track layout.
+
+**For a more professional and comprehensive implementation of a Train Simulation Engine see: <https://github.com/railtoolkit/TrainRuns.jl>**
 
 ![Simulation Output](example_plot.svg "Simulation Output")
 
