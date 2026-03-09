@@ -224,7 +224,7 @@ end
 """
 Constructor to run the simulation.
 """
-function TrainRunSimulation(train::Train, path::Path, dwell_time::Float64)
+function TrainRunSimulation(train::Train, path::Path)
   v_fwd = forward_pass(train, path)
   v_bwd = backward_pass(train, path)
   v_final = min.(v_fwd, v_bwd)
@@ -600,7 +600,7 @@ function main()
   train = Train(train_filepath)
 
   println("Running simulation...")
-  sim = TrainRunSimulation(train, path, dwell_time)
+  sim = TrainRunSimulation(train, path)
   profile = sim.profile
 
   total_time = profile.time_min[end]
