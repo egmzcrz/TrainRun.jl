@@ -517,7 +517,7 @@ function plot_multi_profile(
 
   # Link axes
   linkxaxes!(ax1, ax2, ax3, ax4, ax5, ax1_top, ax2_top, ax3_top, ax4_top, ax5_top)
-  xlims!(ax1, dist_km[1], dist_km[end])
+  #xlims!(ax1, dist_km[1], dist_km[end])
 
   # Station names
   xlabels = Vector{String}(undef, length(station_names))
@@ -536,24 +536,23 @@ function plot_multi_profile(
 
   tot_stations = length(station_names)
   station_pos_km_tmp = copy(station_pos_km)
-  station_pos_km_tmp[1] = station_pos_km[1] + 1 # helps show the first station name correctly
   text!(ax5, collect(zip(station_pos_km_tmp, fill(minimum(times_min), tot_stations))),
-        text = xlabels, rotation=π/2, fontsize=10, font=:bold, color=:gray)
+        text = xlabels, rotation=π/2, fontsize=10, font=:bold, color=:darkblue)
   
   for ax in [ax1, ax2, ax3, ax4, ax5]
     ax.xgridstyle = :dash
     ax.ygridstyle = :dash
+  end
+  for ax_top in [ax1_top, ax2_top, ax3_top, ax4_top, ax5_top]
+    ax_top.xgridstyle = :dash
+    ax_top.ygridstyle = :dash
+    ax_top.xgridcolor = (:darkblue, 0.3)
   end
 
   # Hide distances from top plots, leave them at bottom plot only
   for ax in [ax1, ax2, ax3, ax4]
     hidexdecorations!(ax, grid=false)
   end
-
-  # Hide stations from bottom plots, leave them at top plot only
-  #for ax_top in [ax2_top, ax3_top, ax4_top, ax5_top]
-  #  hidexdecorations!(ax_top, grid=false)
-  #end
 
   # Title Header
   total_time = profile.time_min[end]
