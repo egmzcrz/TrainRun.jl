@@ -12,7 +12,7 @@ The simulation core calculates the train's trajectory by evaluating physical for
 
 The net force acting on the train is calculated using:
 
-$$F_\text{net}=F_\text{traction}-R_\text{davis}-R_\text{slope}-R_\text{curve}$$
+$$F_\text{net}=F_\text{traction}-R_\text{roll}-R_\text{slope}-R_\text{curve}$$
 
 * **Effective Mass**: Accounts for the rotational inertia of the rolling stock:
 
