@@ -1,0 +1,5 @@
+Gooey
+pyyaml
+numpy
+pandas
+matplotlib
