@@ -1,6 +1,6 @@
 # TrainRun.jl
 
-[_Live Demo_ (dummy data inside folder `data`)](http://egmzcrz.github.io/TrainRun.jl)
+[_Live Demo_ (dummy data inside folder `data`)](https://egmzcrz.github.io/trainrun/)
 
 **TrainRun.jl** is a simple Train Run Simulation Engine written in Julia. It calculates the continuous speed, time, force, and energy profiles of a train traveling along a specified track layout.
 
